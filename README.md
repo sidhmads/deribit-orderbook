@@ -42,7 +42,7 @@ User can get orderbook for multiple instruments
    ./bin/deribit-orderbook orderbook btc,eth,usdc,usdt,eurr,any option,spot,future,future_combo,option_combo
    ```
 
-## Thought Process
+## General Considerations
 - The service is designed to be easily scalable within a microservice architecture. The use of the Cobra CLI allows for flexible command handling, making the service adaptable to different commands and arguments.
 
 - Since Deribit's instrument API requires both the currency and the instrument type, users can set these parameters via the CLI using Cobra.
