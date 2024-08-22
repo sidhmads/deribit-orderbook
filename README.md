@@ -43,14 +43,12 @@ User can get orderbook for multiple instruments
    ```
 
 ## Thought Process
-- Scalability: The service is designed to be easily scalable within a microservice architecture. The use of the Cobra CLI allows for flexible command handling, making the service adaptable to different commands and arguments.
+- The service is designed to be easily scalable within a microservice architecture. The use of the Cobra CLI allows for flexible command handling, making the service adaptable to different commands and arguments.
 
-- Instrument Handling: The service requires instrument names for subscribing to order books. The CLI allows users to specify the instruments and their types directly.
+- Since Deribit's instrument API requires both the currency and the instrument type, users can set these parameters via the CLI using Cobra.
 
-- Instrument Subscription: Since Deribit's instrument API requires both the currency and the instrument type, users can set these parameters via the CLI using Cobra.
+- A base WebSocket struct was implemented with customizable OnOpenCallback and OnMessageCallback functions. This design promotes reusability, allowing the WebSocket code to be easily adapted for different use cases such as OHLCV and Order Updates.
 
-- WebSocket Integration: A base WebSocket struct was implemented with customizable OnOpenCallback and OnMessageCallback functions. This design promotes reusability, allowing the WebSocket code to be easily adapted for different data types, such as OHLCV data.
+- Given the high frequency of insertions, deletions, and searches, a Red-Black Tree data structure was chosen for managing the order book.
 
-- Order Book Management: Given the high frequency of insertions, deletions, and searches, a Red-Black Tree data structure was chosen for managing the order book.
-
-- Testing: The codebase includes test cases for the custom order book and other critical functions, ensuring robustness and reliability.
+- The codebase includes test cases for the custom order book and other critical functions.
