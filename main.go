@@ -21,9 +21,10 @@ func execute() {
 	}
 
 	rootCMD.AddCommand(&cobra.Command{
-		Use:   "orderbook",
-		Short: "Starts orderbook feed",
-		Args:  cobra.MinimumNArgs(2),
+		Use:     "orderbook [currencies] [instrumentKinds]",
+		Short:   "Starts orderbook feed",
+		Args:    cobra.MinimumNArgs(2),
+		Example: "orderbook btc,eth,usdc,usdt,eurr,any option,spot,future,future_combo,option_combo",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			connector, err := deribit.NewDeribit()
 			if err != nil {
@@ -50,9 +51,10 @@ func execute() {
 	})
 
 	rootCMD.AddCommand(&cobra.Command{
-		Use:   "orderbook-consumer",
-		Short: "Starts orderbook consumer",
-		Args:  cobra.MinimumNArgs(2),
+		Use:     "orderbook-consumer",
+		Short:   "Starts orderbook consumer",
+		Args:    cobra.MinimumNArgs(2),
+		Example: "orderbook-consumer btc,eth,usdc,usdt,eurr,any option,spot,future,future_combo,option_combo",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			connector, err := deribit.NewDeribit()
 			if err != nil {
