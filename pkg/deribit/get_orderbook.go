@@ -67,7 +67,7 @@ func NewOrderbook(d *Deribit, instruments []Instrument) (*GetOrderbook, error) {
 	instrumentNames := []string{}
 	for _, inst := range instruments {
 		instrumentNames = append(instrumentNames, inst.InstrumentName)
-		instrumentKafkaTopicMapping[inst.InstrumentName] = createOrderbookTopic(inst.SettlementCurrency, inst.Kind)
+		instrumentKafkaTopicMapping[inst.InstrumentName] = orderbookTopic
 	}
 	producerConfig := sarama.NewConfig()
 	producerConfig.Producer.Return.Successes = true

@@ -2,13 +2,10 @@ package deribit
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/IBM/sarama"
-)
-
-const (
-	consumerGroupId = "orderbook-consumer-group"
 )
 
 type OrderbookConsumer struct {
@@ -21,57 +18,68 @@ func NewOrderbookConsumer(d *Deribit) *OrderbookConsumer {
 	}
 }
 
-func (*OrderbookConsumer) Setup(sarama.ConsumerGroupSession) error {
-	return nil
-}
-
-func (*OrderbookConsumer) Cleanup(sarama.ConsumerGroupSession) error {
-	return nil
-}
-
-func (o OrderbookConsumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
-	for msg := range claim.Messages() {
-		log.Printf("key = %s, timestamp = %v orderbook = %s\n",
-			msg.Key, string(msg.Value), msg.Timestamp)
-		session.MarkMessage(msg, "")
-	}
-	return nil
-}
-
-func (o *OrderbookConsumer) StartConsuming(ctx context.Context, validCurrencies, validInstrumentKinds []string) {
+func (o *OrderbookConsumer) StartConsuming(ctx context.Context) error {
 	log.Println("Starting orderbook consumers")
-	topics := []string{}
-	for _, instrumentKind := range validInstrumentKinds {
-		for _, currency := range validCurrencies {
-			topics = append(topics, createOrderbookTopic(currency, instrumentKind))
-		}
-	}
 
 	consumerConfig := sarama.NewConfig()
-	consumerConfig.Consumer.Offsets.Initial = sarama.OffsetNewest
-	consumerConfig.Consumer.Group.Rebalance.Strategy = sarama.NewBalanceStrategyRoundRobin()
-	consumerGroup, err := sarama.NewConsumerGroup([]string{o.config.KAFKA_SERVER_ADDRESS}, consumerGroupId, consumerConfig)
+	consumerConfig.Consumer.Return.Errors = true
+
+	client, err := sarama.NewClient([]string{o.config.KAFKA_SERVER_ADDRESS}, consumerConfig)
 	if err != nil {
-		log.Fatalf("Error creating consumer group: %v", err)
+		return fmt.Errorf("Failed to create Kafka client: %v", err)
 	}
-	defer func() {
-		if err := consumerGroup.Close(); err != nil {
-			log.Fatalf("Error closing consumer group: %v", err)
-		}
-	}()
+	defer client.Close()
+
+	partitions, err := client.Partitions(orderbookTopic)
+	if err != nil {
+		return fmt.Errorf("Failed to get partitions for topic %s: %v", orderbookTopic, err)
+	}
+
+	consumerCtx, cancelFn := context.WithCancel(ctx)
+	for _, partition := range partitions {
+		go o.StartConsumingPerPartition(consumerCtx, partition, consumerConfig)
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
 			log.Println("Context done exiting start consuming function")
-			return
-		default:
-			err = consumerGroup.Consume(ctx, topics, o)
+			cancelFn()
+			log.Println("Shutting down consumers")
+			return nil
+		}
+	}
+}
+
+func (o *OrderbookConsumer) StartConsumingPerPartition(ctx context.Context, partition int32, config *sarama.Config) {
+	consumer, err := sarama.NewConsumer([]string{o.config.KAFKA_SERVER_ADDRESS}, config)
+	if err != nil {
+		log.Fatalf("Failed to start consumer for partition %d: %v", partition, err)
+	}
+	defer consumer.Close()
+
+	log.Printf("Starting to consume on partition: %d", partition)
+
+	partitionConsumer, err := consumer.ConsumePartition(orderbookTopic, partition, sarama.OffsetNewest)
+	if err != nil {
+		log.Fatalf("Failed to consume partition %d: %v", partition, err)
+	}
+	defer partitionConsumer.Close()
+
+	for {
+		select {
+		case message := <-partitionConsumer.Messages():
+			if message != nil {
+				log.Printf("key = %s, orderbook = %s,  timestamp = %v, partition: %d, offset: %d \n",
+					message.Key, message.Value, message.Timestamp, message.Partition, message.Offset)
+			}
+		case err := <-partitionConsumer.Errors():
 			if err != nil {
-				log.Printf("Error from consumer: %v\n", err)
+				log.Printf("Error consuming partition %d: %v", partition, err)
 			}
-			if ctx.Err() != nil {
-				return
-			}
+		case <-ctx.Done():
+			log.Printf("Context done, exiting consumer for partition %d", partition)
+			return
 		}
 	}
 }

@@ -20,26 +20,25 @@ This service provides real-time order book data for various instruments from Der
    ```bash
    go build -o ./bin/deribit-orderbook ./
    ```
-5. **Run the orderbook consumer for a specific instrument**
-   ```bash
-   ./bin/deribit-orderbook orderbook-consumer btc option
-
-   ```
-4. **Open a new terminal in the same working directory and run the orderbook service**
+5. **Open a new terminal in the same working directory and run the orderbook service**
    ```bash
    ./bin/deribit-orderbook orderbook btc option
+   ```
+6. **Run the orderbook consumer**
+   ```bash
+   ./bin/deribit-orderbook orderbook-consumer
    ```
 
 ### Improvements
 User can get orderbook for multiple instruments
 
-1. **Run the orderbook consumer for multiple instruments**
-   ```bash
-   ./bin/deribit-orderbook orderbook-consumer btc,eth,usdc,usdt,eurr,any option,spot,future,future_combo,option_combo
-   ```
-2. **Run the orderbook service for multiple instruments**
+1. **Run the orderbook service for multiple instruments**
    ```bash
    ./bin/deribit-orderbook orderbook btc,eth,usdc,usdt,eurr,any option,spot,future,future_combo,option_combo
+   ```
+2. **Start orderbook consumer**
+   ```bash
+   ./bin/deribit-orderbook orderbook-consumer
    ```
 
 ## General Considerations

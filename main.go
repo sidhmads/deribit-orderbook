@@ -53,22 +53,15 @@ func execute() {
 	rootCMD.AddCommand(&cobra.Command{
 		Use:     "orderbook-consumer",
 		Short:   "Starts orderbook consumer",
-		Args:    cobra.MinimumNArgs(2),
-		Example: "orderbook-consumer btc,eth,usdc,usdt,eurr,any option,spot,future,future_combo,option_combo",
+		Example: "orderbook-consumer",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			connector, err := deribit.NewDeribit()
 			if err != nil {
 				panic(err)
 			}
-			validCurrencies := connector.GetValidCurrenciesFromUser(args[0])
-			validInstrumentKinds := connector.GetValidInstrumentKindFromUser(args[1])
 
-			if len(validCurrencies) == 0 || len(validInstrumentKinds) == 0 {
-				panic(fmt.Errorf("invalid user inputs for either or both valid currencies and valid instrument kinds"))
-			}
 			getConsumer := deribit.NewOrderbookConsumer(connector)
-			getConsumer.StartConsuming(context.Background(), validCurrencies, validInstrumentKinds)
-			return nil
+			return getConsumer.StartConsuming(context.Background())
 		},
 	})
 

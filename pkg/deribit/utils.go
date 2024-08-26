@@ -1,7 +1,6 @@
 package deribit
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -42,11 +41,4 @@ func SplitToBatches[K any](arr []K, sizePerPartition int) [][]K {
 		partitioned = append(partitioned, temp)
 	}
 	return partitioned
-}
-
-func createOrderbookTopic(currency, instrumentKind string) string {
-	if strings.ToLower(instrumentKind) == "spot" {
-		return "spot-orderbook"
-	}
-	return fmt.Sprintf("%s-%s-orderbook", strings.ToLower(currency), strings.ToLower(instrumentKind))
 }

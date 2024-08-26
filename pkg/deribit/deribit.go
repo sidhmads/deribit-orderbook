@@ -13,6 +13,8 @@ const (
 	UsdtCurrency string = "USDT"
 	EurrCurrency string = "EURR"
 	AnyCurrency  string = "ANY"
+
+	orderbookTopic string = "deribit-orderbook"
 )
 
 var (
