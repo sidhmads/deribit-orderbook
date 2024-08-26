@@ -129,7 +129,9 @@ func (o *GetOrderbook) processOrderbookEvent(msg interface{}) error {
 		return err
 	}
 	if orderbookResponse.Method == subscriptionMethod {
-		o.processOrderbook(&orderbookResponse)
+		if len(orderbookResponse.Params.Data.Bids) != 0 || len(orderbookResponse.Params.Data.Asks) != 0 {
+			o.processOrderbook(&orderbookResponse)
+		}
 	} else if len(orderbookResponse.Result) != 0 {
 		log.Printf("Received successful subscription message, subscribed to %d channels\n", len(orderbookResponse.Result))
 	} else if orderbookResponse.Error.Message != "" {
